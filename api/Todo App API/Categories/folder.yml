@@ -1,0 +1,11 @@
+info:
+  name: Categories
+  type: folder
+  seq: 3
+
+request:
+  auth: inherit
+
+docs:
+  content: CRUD endpoints for user-owned task categories.
+  type: text/markdown

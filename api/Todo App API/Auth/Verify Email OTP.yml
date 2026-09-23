@@ -1,0 +1,118 @@
+info:
+  name: Verify Email OTP
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{baseUrl}}/auth/verify-email"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "email": "{{email}}",
+        "otp": "{{verificationOtp}}"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+examples:
+  - name: 200 OK - Email verified and session created
+    request:
+      url: "{{baseUrl}}/auth/verify-email"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "email": "{{email}}",
+            "otp": "{{verificationOtp}}"
+          }
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+        - name: Set-Cookie
+          value: sid=example-session-id; Path=/; HttpOnly; SameSite=Lax
+      body:
+        type: json
+        data: |-
+          {
+            "message": "Email verified successfully.",
+            "user": {
+              "id": 15,
+              "name": "Yasser",
+              "email": "yasser@example.com",
+              "emailVerified": true
+            }
+          }
+  - name: 400 Bad Request - Invalid or expired OTP
+    request:
+      url: "{{baseUrl}}/auth/verify-email"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "email": "{{email}}",
+            "otp": "{{verificationOtp}}"
+          }
+    response:
+      status: 400
+      statusText: Bad Request
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "INVALID_OR_EXPIRED_OTP",
+            "message": "The verification code is invalid or has expired."
+          }
+  - name: 429 Too Many Requests - Too many attempts
+    request:
+      url: "{{baseUrl}}/auth/verify-email"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "email": "{{email}}",
+            "otp": "{{verificationOtp}}"
+          }
+    response:
+      status: 429
+      statusText: Too Many Requests
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "OTP_ATTEMPTS_EXCEEDED",
+            "message": "Too many verification attempts. Request a new code."
+          }
+
+docs: Verify the signup OTP. On success, marks the email as verified and creates the normal application session. The backend sets an HttpOnly session cookie; Postman will keep it in its cookie jar automatically when this request is sent to the real API.

@@ -1,0 +1,82 @@
+info:
+  name: Get Task
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{baseUrl}}/tasks/{{taskId}}"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+examples:
+  - name: 200 OK
+    request:
+      url: "{{baseUrl}}/tasks/{{taskId}}"
+      method: GET
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "id": 101,
+            "title": "Prepare Monday standup slides",
+            "description": "Cover sprint progress and blockers",
+            "dueDate": "2026-09-25",
+            "isCompleted": false,
+            "isImportant": true,
+            "completedAt": null,
+            "category": {
+              "id": 3,
+              "name": "Work"
+            },
+            "createdAt": "2026-09-23T08:00:00.000Z",
+            "updatedAt": "2026-09-23T08:00:00.000Z"
+          }
+  - name: 401 Unauthorized
+    request:
+      url: "{{baseUrl}}/tasks/{{taskId}}"
+      method: GET
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "UNAUTHENTICATED",
+            "message": "Authentication required."
+          }
+  - name: 404 Not Found
+    request:
+      url: "{{baseUrl}}/tasks/{{taskId}}"
+      method: GET
+    response:
+      status: 404
+      statusText: Not Found
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "TASK_NOT_FOUND",
+            "message": "Task not found."
+          }
+
+docs: Get one task owned by the authenticated user.

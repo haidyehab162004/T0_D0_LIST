@@ -1,0 +1,84 @@
+info:
+  name: Delete Category
+  type: http
+  seq: 4
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/categories/{{categoryId}}"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+examples:
+  - name: 204 No Content
+    request:
+      url: "{{baseUrl}}/categories/{{categoryId}}"
+      method: DELETE
+    response:
+      status: 204
+      statusText: No Content
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: ""
+  - name: 401 Unauthorized
+    request:
+      url: "{{baseUrl}}/categories/{{categoryId}}"
+      method: DELETE
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "UNAUTHENTICATED",
+            "message": "Authentication required."
+          }
+  - name: 404 Not Found
+    request:
+      url: "{{baseUrl}}/categories/{{categoryId}}"
+      method: DELETE
+    response:
+      status: 404
+      statusText: Not Found
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "CATEGORY_NOT_FOUND",
+            "message": "Category not found."
+          }
+  - name: 409 Conflict - Category in use
+    request:
+      url: "{{baseUrl}}/categories/{{categoryId}}"
+      method: DELETE
+    response:
+      status: 409
+      statusText: Conflict
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "CATEGORY_IN_USE",
+            "message": "Category cannot be deleted while tasks are assigned to it."
+          }
+
+docs: Delete an owned category. Current contract rejects deletion while tasks are still assigned to it.

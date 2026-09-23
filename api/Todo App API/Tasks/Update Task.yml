@@ -1,0 +1,157 @@
+info:
+  name: Update Task
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/tasks/{{taskId}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "title": "Learn advanced TypeScript",
+        "isCompleted": true,
+        "isImportant": true
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+examples:
+  - name: 200 OK
+    request:
+      url: "{{baseUrl}}/tasks/{{taskId}}"
+      method: PATCH
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "title": "Learn advanced TypeScript",
+            "isCompleted": true,
+            "isImportant": true
+          }
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "id": 102,
+            "title": "Learn advanced TypeScript",
+            "description": "Study generics and utility types",
+            "dueDate": "2026-09-30",
+            "isCompleted": true,
+            "isImportant": true,
+            "completedAt": "2026-09-23T10:00:00.000Z",
+            "category": {
+              "id": 2,
+              "name": "Study"
+            },
+            "createdAt": "2026-09-23T09:00:00.000Z",
+            "updatedAt": "2026-09-23T10:00:00.000Z"
+          }
+  - name: 400 Bad Request - Validation error
+    request:
+      url: "{{baseUrl}}/tasks/{{taskId}}"
+      method: PATCH
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "title": "Learn advanced TypeScript",
+            "isCompleted": true,
+            "isImportant": true
+          }
+    response:
+      status: 400
+      statusText: Bad Request
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "VALIDATION_ERROR",
+            "message": "Invalid request.",
+            "errors": {
+              "dueDate": "Invalid date."
+            }
+          }
+  - name: 401 Unauthorized
+    request:
+      url: "{{baseUrl}}/tasks/{{taskId}}"
+      method: PATCH
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "title": "Learn advanced TypeScript",
+            "isCompleted": true,
+            "isImportant": true
+          }
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "UNAUTHENTICATED",
+            "message": "Authentication required."
+          }
+  - name: 404 Not Found
+    request:
+      url: "{{baseUrl}}/tasks/{{taskId}}"
+      method: PATCH
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "title": "Learn advanced TypeScript",
+            "isCompleted": true,
+            "isImportant": true
+          }
+    response:
+      status: 404
+      statusText: Not Found
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "TASK_NOT_FOUND",
+            "message": "Task not found."
+          }
+
+docs: Partially update an owned task. The same endpoint handles editing fields, completing/uncompleting, and starring/unstarring.

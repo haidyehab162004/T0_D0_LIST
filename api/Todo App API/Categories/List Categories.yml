@@ -1,0 +1,69 @@
+info:
+  name: List Categories
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{baseUrl}}/categories"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+examples:
+  - name: 200 OK
+    request:
+      url: "{{baseUrl}}/categories"
+      method: GET
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "data": [
+              {
+                "id": 1,
+                "name": "Personal",
+                "taskCount": 4
+              },
+              {
+                "id": 2,
+                "name": "Study",
+                "taskCount": 8
+              },
+              {
+                "id": 3,
+                "name": "Work",
+                "taskCount": 12
+              }
+            ]
+          }
+  - name: 401 Unauthorized
+    request:
+      url: "{{baseUrl}}/categories"
+      method: GET
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "UNAUTHENTICATED",
+            "message": "Authentication required."
+          }
+
+docs: List categories owned by the authenticated user.

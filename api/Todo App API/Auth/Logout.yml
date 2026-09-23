@@ -1,0 +1,50 @@
+info:
+  name: Logout
+  type: http
+  seq: 10
+
+http:
+  method: POST
+  url: "{{baseUrl}}/auth/logout"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+examples:
+  - name: 204 No Content
+    request:
+      url: "{{baseUrl}}/auth/logout"
+      method: POST
+    response:
+      status: 204
+      statusText: No Content
+      headers:
+        - name: Set-Cookie
+          value: sid=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0
+      body:
+        type: text
+        data: ""
+  - name: 401 Unauthorized
+    request:
+      url: "{{baseUrl}}/auth/logout"
+      method: POST
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "UNAUTHENTICATED",
+            "message": "Authentication required."
+          }
+
+docs: Destroy the current server-side session and clear the session cookie.

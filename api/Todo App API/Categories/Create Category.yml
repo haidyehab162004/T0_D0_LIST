@@ -1,0 +1,148 @@
+info:
+  name: Create Category
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{baseUrl}}/categories"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Work"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: "if (res.getStatus() === 201) {\r
+
+        \  const data = res.getBody();\r
+
+        \  if (data.id) bru.setCollectionVar(\"categoryId\", String(data.id));\r
+
+        }"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+examples:
+  - name: 201 Created
+    request:
+      url: "{{baseUrl}}/categories"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "name": "Work"
+          }
+    response:
+      status: 201
+      statusText: Created
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "id": 3,
+            "name": "Work",
+            "taskCount": 0
+          }
+  - name: 400 Bad Request - Validation error
+    request:
+      url: "{{baseUrl}}/categories"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "name": "Work"
+          }
+    response:
+      status: 400
+      statusText: Bad Request
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "VALIDATION_ERROR",
+            "message": "Invalid request.",
+            "errors": {
+              "name": "Category name is required."
+            }
+          }
+  - name: 401 Unauthorized
+    request:
+      url: "{{baseUrl}}/categories"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "name": "Work"
+          }
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "UNAUTHENTICATED",
+            "message": "Authentication required."
+          }
+  - name: 409 Conflict - Duplicate name
+    request:
+      url: "{{baseUrl}}/categories"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "name": "Work"
+          }
+    response:
+      status: 409
+      statusText: Conflict
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "CATEGORY_ALREADY_EXISTS",
+            "message": "A category with this name already exists."
+          }
+
+docs: Create a category for the authenticated user.

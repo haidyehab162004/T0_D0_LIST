@@ -1,0 +1,46 @@
+opencollection: 1.0.0
+
+info:
+  name: Todo App API
+
+request:
+  variables:
+    - name: baseUrl
+      value: http://localhost:3000/api
+    - name: name
+      value: Yasser
+    - name: email
+      value: yasser@example.com
+    - name: password
+      value: Password123!
+    - name: verificationOtp
+      value: "583921"
+    - name: resetOtp
+      value: "917462"
+    - name: resetToken
+      value: reset_eyJhbGciOi...example
+    - name: googleCredential
+      value: PASTE_GOOGLE_ID_TOKEN_HERE
+    - name: taskId
+      value: "101"
+    - name: categoryId
+      value: "3"
+
+docs:
+  content: |-
+    API contract for the Todo application backend (Node.js + Express + TypeScript).
+
+    Authentication pattern: server-side sessions with an HttpOnly cookie. There is no Bearer token for ordinary authenticated requests. After Verify Email, Login, or Google Login succeeds against the real API, Postman automatically stores the session cookie and sends it on later requests to the same host.
+
+    Local default base URL: http://localhost:3000/api
+
+    Planned persistence stack: PostgreSQL on Neon + Drizzle ORM. Session storage is separate from PostgreSQL (Redis in production).
+
+    The saved examples are the agreed API contract and can be used by the frontend team before implementation is complete.
+  type: text/markdown
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git

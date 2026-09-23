@@ -1,0 +1,163 @@
+info:
+  name: Update Category
+  type: http
+  seq: 3
+
+http:
+  method: PATCH
+  url: "{{baseUrl}}/categories/{{categoryId}}"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "name": "University"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+examples:
+  - name: 200 OK
+    request:
+      url: "{{baseUrl}}/categories/{{categoryId}}"
+      method: PATCH
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "name": "University"
+          }
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "id": 3,
+            "name": "University",
+            "taskCount": 5
+          }
+  - name: 400 Bad Request - Validation error
+    request:
+      url: "{{baseUrl}}/categories/{{categoryId}}"
+      method: PATCH
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "name": "University"
+          }
+    response:
+      status: 400
+      statusText: Bad Request
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "VALIDATION_ERROR",
+            "message": "Invalid request.",
+            "errors": {
+              "name": "Category name is required."
+            }
+          }
+  - name: 401 Unauthorized
+    request:
+      url: "{{baseUrl}}/categories/{{categoryId}}"
+      method: PATCH
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "name": "University"
+          }
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "UNAUTHENTICATED",
+            "message": "Authentication required."
+          }
+  - name: 404 Not Found
+    request:
+      url: "{{baseUrl}}/categories/{{categoryId}}"
+      method: PATCH
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "name": "University"
+          }
+    response:
+      status: 404
+      statusText: Not Found
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "CATEGORY_NOT_FOUND",
+            "message": "Category not found."
+          }
+  - name: 409 Conflict - Duplicate name
+    request:
+      url: "{{baseUrl}}/categories/{{categoryId}}"
+      method: PATCH
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "name": "University"
+          }
+    response:
+      status: 409
+      statusText: Conflict
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "CATEGORY_ALREADY_EXISTS",
+            "message": "A category with this name already exists."
+          }
+
+docs: Rename a category owned by the authenticated user.

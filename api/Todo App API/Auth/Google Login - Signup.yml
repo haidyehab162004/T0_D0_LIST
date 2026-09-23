@@ -1,0 +1,113 @@
+info:
+  name: Google Login / Signup
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{baseUrl}}/auth/google"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "credential": "{{googleCredential}}"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+examples:
+  - name: 200 OK - Google sign-in
+    request:
+      url: "{{baseUrl}}/auth/google"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "credential": "{{googleCredential}}"
+          }
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+        - name: Set-Cookie
+          value: sid=example-session-id; Path=/; HttpOnly; SameSite=Lax
+      body:
+        type: json
+        data: |-
+          {
+            "user": {
+              "id": 15,
+              "name": "Yasser",
+              "email": "yasser@gmail.com",
+              "emailVerified": true
+            }
+          }
+  - name: 401 Unauthorized - Invalid Google credential
+    request:
+      url: "{{baseUrl}}/auth/google"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "credential": "{{googleCredential}}"
+          }
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "INVALID_GOOGLE_CREDENTIAL",
+            "message": "Google authentication failed."
+          }
+  - name: 409 Conflict - Account linking required
+    request:
+      url: "{{baseUrl}}/auth/google"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "credential": "{{googleCredential}}"
+          }
+    response:
+      status: 409
+      statusText: Conflict
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "ACCOUNT_LINKING_REQUIRED",
+            "message": "An account already exists for this email. Sign in using the existing method before linking Google."
+          }
+
+docs: Sign in or register with Google. The frontend sends the Google ID token/credential. The backend verifies it with Google, finds or creates the local user, then creates the same server-side session used by normal login.

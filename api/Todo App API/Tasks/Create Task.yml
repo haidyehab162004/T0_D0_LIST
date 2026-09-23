@@ -1,0 +1,178 @@
+info:
+  name: Create Task
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{baseUrl}}/tasks"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "title": "Learn TypeScript",
+        "description": "Study generics and utility types",
+        "dueDate": "2026-09-30",
+        "categoryId": 2,
+        "isImportant": true
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: "if (res.getStatus() === 201) {\r
+
+        \  const data = res.getBody();\r
+
+        \  if (data.id) bru.setCollectionVar(\"taskId\", String(data.id));\r
+
+        }"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+examples:
+  - name: 201 Created
+    request:
+      url: "{{baseUrl}}/tasks"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "title": "Learn TypeScript",
+            "description": "Study generics and utility types",
+            "dueDate": "2026-09-30",
+            "categoryId": 2,
+            "isImportant": true
+          }
+    response:
+      status: 201
+      statusText: Created
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "id": 102,
+            "title": "Learn TypeScript",
+            "description": "Study generics and utility types",
+            "dueDate": "2026-09-30",
+            "isCompleted": false,
+            "isImportant": true,
+            "completedAt": null,
+            "category": {
+              "id": 2,
+              "name": "Study"
+            },
+            "createdAt": "2026-09-23T09:00:00.000Z",
+            "updatedAt": "2026-09-23T09:00:00.000Z"
+          }
+  - name: 400 Bad Request - Validation error
+    request:
+      url: "{{baseUrl}}/tasks"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "title": "Learn TypeScript",
+            "description": "Study generics and utility types",
+            "dueDate": "2026-09-30",
+            "categoryId": 2,
+            "isImportant": true
+          }
+    response:
+      status: 400
+      statusText: Bad Request
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "VALIDATION_ERROR",
+            "message": "Invalid request.",
+            "errors": {
+              "title": "Title is required."
+            }
+          }
+  - name: 400 Bad Request - Invalid category
+    request:
+      url: "{{baseUrl}}/tasks"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "title": "Learn TypeScript",
+            "description": "Study generics and utility types",
+            "dueDate": "2026-09-30",
+            "categoryId": 2,
+            "isImportant": true
+          }
+    response:
+      status: 400
+      statusText: Bad Request
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "INVALID_CATEGORY",
+            "message": "The selected category is invalid."
+          }
+  - name: 401 Unauthorized
+    request:
+      url: "{{baseUrl}}/tasks"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "title": "Learn TypeScript",
+            "description": "Study generics and utility types",
+            "dueDate": "2026-09-30",
+            "categoryId": 2,
+            "isImportant": true
+          }
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "UNAUTHENTICATED",
+            "message": "Authentication required."
+          }
+
+docs: Create a task for the authenticated user. userId is taken from the session and must not be accepted from the client.

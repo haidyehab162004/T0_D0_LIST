@@ -1,0 +1,144 @@
+info:
+  name: Login
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{baseUrl}}/auth/login"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "email": "{{email}}",
+        "password": "{{password}}"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+examples:
+  - name: 200 OK - Logged in
+    request:
+      url: "{{baseUrl}}/auth/login"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "email": "{{email}}",
+            "password": "{{password}}"
+          }
+    response:
+      status: 200
+      statusText: OK
+      headers:
+        - name: Content-Type
+          value: application/json
+        - name: Set-Cookie
+          value: sid=example-session-id; Path=/; HttpOnly; SameSite=Lax
+      body:
+        type: json
+        data: |-
+          {
+            "user": {
+              "id": 15,
+              "name": "Yasser",
+              "email": "yasser@example.com",
+              "emailVerified": true
+            }
+          }
+  - name: 401 Unauthorized - Invalid credentials
+    request:
+      url: "{{baseUrl}}/auth/login"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "email": "{{email}}",
+            "password": "{{password}}"
+          }
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "INVALID_CREDENTIALS",
+            "message": "Invalid email or password."
+          }
+  - name: 403 Forbidden - Email not verified
+    request:
+      url: "{{baseUrl}}/auth/login"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "email": "{{email}}",
+            "password": "{{password}}"
+          }
+    response:
+      status: 403
+      statusText: Forbidden
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "EMAIL_NOT_VERIFIED",
+            "message": "Please verify your email before signing in."
+          }
+  - name: 429 Too Many Requests
+    request:
+      url: "{{baseUrl}}/auth/login"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "email": "{{email}}",
+            "password": "{{password}}"
+          }
+    response:
+      status: 429
+      statusText: Too Many Requests
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "RATE_LIMITED",
+            "message": "Too many login attempts. Please try again later."
+          }
+
+docs: Sign in with email and password. The email must already be verified. On success the backend sets the same HttpOnly session cookie used by Google login and email verification.

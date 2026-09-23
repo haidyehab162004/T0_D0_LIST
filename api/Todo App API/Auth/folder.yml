@@ -1,0 +1,11 @@
+info:
+  name: Auth
+  type: folder
+  seq: 1
+
+request:
+  auth: inherit
+
+docs:
+  content: Email/password signup with OTP verification, Google sign-in, password reset with OTP, and cookie-based server sessions.
+  type: text/markdown

@@ -1,0 +1,11 @@
+info:
+  name: Tasks
+  type: folder
+  seq: 2
+
+request:
+  auth: inherit
+
+docs:
+  content: CRUD endpoints for the authenticated user's tasks. Important/completed views are filters on this resource, not separate resources.
+  type: text/markdown

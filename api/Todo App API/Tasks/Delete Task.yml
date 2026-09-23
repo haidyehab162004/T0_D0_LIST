@@ -1,0 +1,67 @@
+info:
+  name: Delete Task
+  type: http
+  seq: 5
+
+http:
+  method: DELETE
+  url: "{{baseUrl}}/tasks/{{taskId}}"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+examples:
+  - name: 204 No Content
+    request:
+      url: "{{baseUrl}}/tasks/{{taskId}}"
+      method: DELETE
+    response:
+      status: 204
+      statusText: No Content
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: ""
+  - name: 401 Unauthorized
+    request:
+      url: "{{baseUrl}}/tasks/{{taskId}}"
+      method: DELETE
+    response:
+      status: 401
+      statusText: Unauthorized
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "UNAUTHENTICATED",
+            "message": "Authentication required."
+          }
+  - name: 404 Not Found
+    request:
+      url: "{{baseUrl}}/tasks/{{taskId}}"
+      method: DELETE
+    response:
+      status: 404
+      statusText: Not Found
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "TASK_NOT_FOUND",
+            "message": "Task not found."
+          }
+
+docs: Delete a task owned by the authenticated user.

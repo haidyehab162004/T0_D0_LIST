@@ -1,0 +1,151 @@
+info:
+  name: Register
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{baseUrl}}/auth/register"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "name": "{{name}}",
+        "email": "{{email}}",
+        "password": "{{password}}"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
+
+examples:
+  - name: 201 Created - Verification OTP sent
+    request:
+      url: "{{baseUrl}}/auth/register"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "name": "{{name}}",
+            "email": "{{email}}",
+            "password": "{{password}}"
+          }
+    response:
+      status: 201
+      statusText: Created
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "message": "Verification code sent to your email.",
+            "user": {
+              "id": 15,
+              "name": "Yasser",
+              "email": "yasser@example.com",
+              "emailVerified": false
+            }
+          }
+  - name: 400 Bad Request - Validation error
+    request:
+      url: "{{baseUrl}}/auth/register"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "name": "{{name}}",
+            "email": "{{email}}",
+            "password": "{{password}}"
+          }
+    response:
+      status: 400
+      statusText: Bad Request
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "VALIDATION_ERROR",
+            "message": "Invalid request.",
+            "errors": {
+              "password": "Password must be at least 8 characters."
+            }
+          }
+  - name: 409 Conflict - Email already registered
+    request:
+      url: "{{baseUrl}}/auth/register"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "name": "{{name}}",
+            "email": "{{email}}",
+            "password": "{{password}}"
+          }
+    response:
+      status: 409
+      statusText: Conflict
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "EMAIL_ALREADY_EXISTS",
+            "message": "An account with this email already exists."
+          }
+  - name: 429 Too Many Requests
+    request:
+      url: "{{baseUrl}}/auth/register"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "name": "{{name}}",
+            "email": "{{email}}",
+            "password": "{{password}}"
+          }
+    response:
+      status: 429
+      statusText: Too Many Requests
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+            "code": "RATE_LIMITED",
+            "message": "Too many requests. Please try again later."
+          }
+
+docs: Register a local email/password account. Creates the user as unverified and sends an email OTP. No authenticated session is created until email verification succeeds.
