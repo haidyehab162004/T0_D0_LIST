@@ -1,0 +1,1312 @@
+openapi: 3.1.0
+info:
+  title: Todo App API
+  version: 1.0.0
+  description: Contract-first API specification for the Todo application backend (Node.js + Express + TypeScript). Authentication
+    uses server-side sessions with an HttpOnly cookie. The API contract mirrors the current Bruno collection.
+servers:
+- url: /api
+  description: Same-origin API base path (recommended for Swagger UI)
+- url: http://localhost:3000/api
+  description: Explicit local development server
+tags:
+- name: Auth
+  description: Authentication and account recovery
+- name: Tasks
+  description: CRUD operations for user-owned tasks
+- name: Categories
+  description: CRUD operations for user-owned categories
+paths:
+  /auth/register:
+    post:
+      tags:
+      - Auth
+      operationId: register
+      summary: Register with email and password
+      description: Creates an unverified local account and sends an email verification OTP. No authenticated session is created
+        yet.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Account created and verification OTP sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+              examples:
+                created:
+                  value:
+                    message: Verification code sent to your email.
+                    user:
+                      id: 15
+                      name: Yasser
+                      email: yasser@example.com
+                      emailVerified: false
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              examples:
+                validationError:
+                  value:
+                    code: VALIDATION_ERROR
+                    message: Invalid request.
+                    errors:
+                      password: Password must be at least 8 characters.
+        '409':
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                emailExists:
+                  value:
+                    code: EMAIL_ALREADY_EXISTS
+                    message: An account with this email already exists.
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rateLimited:
+                  value:
+                    code: RATE_LIMITED
+                    message: Too many requests. Please try again later.
+  /auth/verify-email:
+    post:
+      tags:
+      - Auth
+      operationId: verifyEmail
+      summary: Verify signup email OTP
+      description: Verifies the signup OTP. On success, marks the email as verified and creates the normal server-side session.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpRequest'
+      responses:
+        '200':
+          description: Email verified and session created
+          headers: &id001
+            Set-Cookie:
+              description: HttpOnly server-side session cookie.
+              schema:
+                type: string
+              example: sid=example-session-id; Path=/; HttpOnly; SameSite=Lax
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationSuccessResponse'
+              examples:
+                verified:
+                  value:
+                    message: Email verified successfully.
+                    user:
+                      id: 15
+                      name: Yasser
+                      email: yasser@example.com
+                      emailVerified: true
+        '400':
+          description: Invalid or expired OTP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidOtp:
+                  value:
+                    code: INVALID_OR_EXPIRED_OTP
+                    message: The verification code is invalid or has expired.
+        '429':
+          description: Too many OTP attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                attemptsExceeded:
+                  value:
+                    code: OTP_ATTEMPTS_EXCEEDED
+                    message: Too many verification attempts. Request a new code.
+  /auth/resend-verification-otp:
+    post:
+      tags:
+      - Auth
+      operationId: resendVerificationOtp
+      summary: Resend email verification OTP
+      description: Sends a new verification OTP, invalidating the previous OTP. Resend requests are rate-limited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailRequest'
+      responses:
+        '200':
+          description: Generic resend response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              examples:
+                sent:
+                  value:
+                    message: If the account requires verification, a new code has been sent.
+        '429':
+          description: Resend rate limited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rateLimited:
+                  value:
+                    code: RATE_LIMITED
+                    message: Please wait before requesting another code.
+  /auth/login:
+    post:
+      tags:
+      - Auth
+      operationId: login
+      summary: Login with email and password
+      description: The email must already be verified. On success, the backend creates a server-side session and sets the
+        HttpOnly session cookie.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Logged in
+          headers: *id001
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+              examples:
+                loggedIn:
+                  value:
+                    user:
+                      id: 15
+                      name: Yasser
+                      email: yasser@example.com
+                      emailVerified: true
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidCredentials:
+                  value:
+                    code: INVALID_CREDENTIALS
+                    message: Invalid email or password.
+        '403':
+          description: Email not verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                emailNotVerified:
+                  value:
+                    code: EMAIL_NOT_VERIFIED
+                    message: Please verify your email before signing in.
+        '429':
+          description: Too many login attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rateLimited:
+                  value:
+                    code: RATE_LIMITED
+                    message: Too many login attempts. Please try again later.
+  /auth/google:
+    post:
+      tags:
+      - Auth
+      operationId: googleLogin
+      summary: Login or register with Google
+      description: The frontend sends a Google ID token/credential. The backend verifies it, finds or creates the local user,
+        and creates the same server-side session used by normal login.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleLoginRequest'
+      responses:
+        '200':
+          description: Google sign-in successful
+          headers: *id001
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+              examples:
+                googleLogin:
+                  value:
+                    user:
+                      id: 15
+                      name: Yasser
+                      email: yasser@gmail.com
+                      emailVerified: true
+        '401':
+          description: Invalid Google credential
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidGoogleCredential:
+                  value:
+                    code: INVALID_GOOGLE_CREDENTIAL
+                    message: Google authentication failed.
+        '409':
+          description: Existing account requires explicit linking
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                accountLinkingRequired:
+                  value:
+                    code: ACCOUNT_LINKING_REQUIRED
+                    message: An account already exists for this email. Sign in using the existing method before linking Google.
+  /auth/forgot-password:
+    post:
+      tags:
+      - Auth
+      operationId: forgotPassword
+      summary: Send password-reset OTP
+      description: Returns a generic response whether or not the email exists.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailRequest'
+      responses:
+        '200':
+          description: Generic password-reset OTP response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              examples:
+                generic:
+                  value:
+                    message: If an account exists for this email, a verification code has been sent.
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rateLimited:
+                  value:
+                    code: RATE_LIMITED
+                    message: Too many requests. Please try again later.
+  /auth/verify-reset-otp:
+    post:
+      tags:
+      - Auth
+      operationId: verifyResetOtp
+      summary: Verify password-reset OTP
+      description: On success returns a short-lived, single-purpose reset token. This does not create an authenticated session.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpRequest'
+      responses:
+        '200':
+          description: Reset token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResetTokenResponse'
+        '400':
+          description: Invalid or expired OTP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidOtp:
+                  value:
+                    code: INVALID_OR_EXPIRED_OTP
+                    message: The verification code is invalid or has expired.
+        '429':
+          description: Too many verification attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                attemptsExceeded:
+                  value:
+                    code: OTP_ATTEMPTS_EXCEEDED
+                    message: Too many verification attempts. Request a new code.
+  /auth/reset-password:
+    post:
+      tags:
+      - Auth
+      operationId: resetPassword
+      summary: Reset password
+      description: Sets a new password using the short-lived reset token returned by /auth/verify-reset-otp. The token becomes
+        invalid after successful use.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: Password reset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+              examples:
+                reset:
+                  value:
+                    message: Password reset successfully.
+        '400':
+          description: Invalid/expired reset token or password validation error
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ErrorResponse'
+                - $ref: '#/components/schemas/ValidationErrorResponse'
+              examples:
+                invalidResetToken:
+                  value:
+                    code: INVALID_OR_EXPIRED_RESET_TOKEN
+                    message: The reset token is invalid or has expired.
+                passwordValidation:
+                  value:
+                    code: VALIDATION_ERROR
+                    message: Invalid request.
+                    errors:
+                      newPassword: Password does not meet the minimum requirements.
+  /auth/me:
+    get:
+      tags:
+      - Auth
+      operationId: getCurrentUser
+      summary: Get current user
+      description: Returns the currently authenticated user from the server-side session.
+      security:
+      - sessionCookie: []
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthenticated:
+                  value:
+                    code: UNAUTHENTICATED
+                    message: Authentication required.
+  /auth/logout:
+    post:
+      tags:
+      - Auth
+      operationId: logout
+      summary: Logout
+      description: Destroys the current server-side session and clears the session cookie.
+      security:
+      - sessionCookie: []
+      responses:
+        '204':
+          description: Logged out successfully
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthenticated:
+                  value:
+                    code: UNAUTHENTICATED
+                    message: Authentication required.
+  /tasks:
+    get:
+      tags:
+      - Tasks
+      operationId: listTasks
+      summary: List tasks
+      description: Lists only the authenticated user's tasks, with optional filtering, search, sorting, and pagination.
+      security:
+      - sessionCookie: []
+      parameters:
+      - name: completed
+        in: query
+        required: false
+        description: Filter by completion status.
+        schema:
+          type: boolean
+        example: false
+      - name: important
+        in: query
+        required: false
+        description: Filter by important/starred status.
+        schema:
+          type: boolean
+        example: true
+      - name: categoryId
+        in: query
+        required: false
+        description: Filter by category ID.
+        schema:
+          type: integer
+        example: 3
+      - name: q
+        in: query
+        required: false
+        description: Search task title/description.
+        schema:
+          type: string
+        example: meeting
+      - name: sort
+        in: query
+        required: false
+        description: Sort field.
+        schema:
+          type: string
+          enum:
+          - createdAt
+          - dueDate
+          - title
+        example: createdAt
+      - name: order
+        in: query
+        required: false
+        description: Sort direction.
+        schema:
+          type: string
+          enum:
+          - asc
+          - desc
+        example: desc
+      - name: page
+        in: query
+        required: false
+        description: Page number.
+        schema:
+          type: integer
+          minimum: 1
+        example: 1
+      - name: limit
+        in: query
+        required: false
+        description: Page size.
+        schema:
+          type: integer
+          minimum: 1
+        example: 20
+      responses:
+        '200':
+          description: Tasks returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskListResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthenticated:
+                  value:
+                    code: UNAUTHENTICATED
+                    message: Authentication required.
+    post:
+      tags:
+      - Tasks
+      operationId: createTask
+      summary: Create task
+      description: Creates a task for the authenticated user. userId comes from the session and is never accepted from the
+        client.
+      security:
+      - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '201':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Validation error or invalid category
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/ValidationErrorResponse'
+                - $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validationError:
+                  value:
+                    code: VALIDATION_ERROR
+                    message: Invalid request.
+                    errors:
+                      title: Title is required.
+                invalidCategory:
+                  value:
+                    code: INVALID_CATEGORY
+                    message: The selected category is invalid.
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthenticated:
+                  value:
+                    code: UNAUTHENTICATED
+                    message: Authentication required.
+  /tasks/{taskId}:
+    parameters:
+    - name: taskId
+      in: path
+      required: true
+      schema:
+        type: integer
+      example: 101
+    get:
+      tags:
+      - Tasks
+      operationId: getTask
+      summary: Get task
+      description: Gets one task owned by the authenticated user.
+      security:
+      - sessionCookie: []
+      responses:
+        '200':
+          description: Task returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthenticated:
+                  value:
+                    code: UNAUTHENTICATED
+                    message: Authentication required.
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  value:
+                    code: TASK_NOT_FOUND
+                    message: Task not found.
+    patch:
+      tags:
+      - Tasks
+      operationId: updateTask
+      summary: Update task
+      description: Partially updates an owned task. This handles editing fields, completing/uncompleting, and starring/unstarring.
+      security:
+      - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              examples:
+                invalidDate:
+                  value:
+                    code: VALIDATION_ERROR
+                    message: Invalid request.
+                    errors:
+                      dueDate: Invalid date.
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthenticated:
+                  value:
+                    code: UNAUTHENTICATED
+                    message: Authentication required.
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  value:
+                    code: TASK_NOT_FOUND
+                    message: Task not found.
+    delete:
+      tags:
+      - Tasks
+      operationId: deleteTask
+      summary: Delete task
+      description: Deletes a task owned by the authenticated user.
+      security:
+      - sessionCookie: []
+      responses:
+        '204':
+          description: Task deleted
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthenticated:
+                  value:
+                    code: UNAUTHENTICATED
+                    message: Authentication required.
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  value:
+                    code: TASK_NOT_FOUND
+                    message: Task not found.
+  /categories:
+    get:
+      tags:
+      - Categories
+      operationId: listCategories
+      summary: List categories
+      description: Lists categories owned by the authenticated user.
+      security:
+      - sessionCookie: []
+      responses:
+        '200':
+          description: Categories returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryListResponse'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthenticated:
+                  value:
+                    code: UNAUTHENTICATED
+                    message: Authentication required.
+    post:
+      tags:
+      - Categories
+      operationId: createCategory
+      summary: Create category
+      description: Creates a category for the authenticated user.
+      security:
+      - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+      responses:
+        '201':
+          description: Category created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              examples:
+                validationError:
+                  value:
+                    code: VALIDATION_ERROR
+                    message: Invalid request.
+                    errors:
+                      name: Category name is required.
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthenticated:
+                  value:
+                    code: UNAUTHENTICATED
+                    message: Authentication required.
+        '409':
+          description: Duplicate category name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                alreadyExists:
+                  value:
+                    code: CATEGORY_ALREADY_EXISTS
+                    message: A category with this name already exists.
+  /categories/{categoryId}:
+    parameters:
+    - name: categoryId
+      in: path
+      required: true
+      schema:
+        type: integer
+      example: 3
+    patch:
+      tags:
+      - Categories
+      operationId: updateCategory
+      summary: Update category
+      description: Renames a category owned by the authenticated user.
+      security:
+      - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+      responses:
+        '200':
+          description: Category updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+              examples:
+                validationError:
+                  value:
+                    code: VALIDATION_ERROR
+                    message: Invalid request.
+                    errors:
+                      name: Category name is required.
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthenticated:
+                  value:
+                    code: UNAUTHENTICATED
+                    message: Authentication required.
+        '404':
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  value:
+                    code: CATEGORY_NOT_FOUND
+                    message: Category not found.
+        '409':
+          description: Duplicate category name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                alreadyExists:
+                  value:
+                    code: CATEGORY_ALREADY_EXISTS
+                    message: A category with this name already exists.
+    delete:
+      tags:
+      - Categories
+      operationId: deleteCategory
+      summary: Delete category
+      description: Deletes an owned category. Deletion is rejected while tasks are assigned to it.
+      security:
+      - sessionCookie: []
+      responses:
+        '204':
+          description: Category deleted
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthenticated:
+                  value:
+                    code: UNAUTHENTICATED
+                    message: Authentication required.
+        '404':
+          description: Category not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  value:
+                    code: CATEGORY_NOT_FOUND
+                    message: Category not found.
+        '409':
+          description: Category still has assigned tasks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                inUse:
+                  value:
+                    code: CATEGORY_IN_USE
+                    message: Category cannot be deleted while tasks are assigned to it.
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: sid
+      description: Server-side session identifier stored in an HttpOnly cookie.
+  schemas:
+    User:
+      type: object
+      required:
+      - id
+      - name
+      - email
+      - emailVerified
+      properties:
+        id:
+          type: integer
+          example: 15
+        name:
+          type: string
+          example: Yasser
+        email:
+          type: string
+          format: email
+          example: yasser@example.com
+        emailVerified:
+          type: boolean
+          example: true
+    RegisterRequest:
+      type: object
+      required:
+      - name
+      - email
+      - password
+      properties:
+        name:
+          type: string
+          example: Yasser
+        email:
+          type: string
+          format: email
+          example: yasser@example.com
+        password:
+          type: string
+          minLength: 8
+          example: Password123!
+    EmailRequest:
+      type: object
+      required:
+      - email
+      properties:
+        email:
+          type: string
+          format: email
+          example: yasser@example.com
+    OtpRequest:
+      type: object
+      required:
+      - email
+      - otp
+      properties:
+        email:
+          type: string
+          format: email
+          example: yasser@example.com
+        otp:
+          type: string
+          example: '583921'
+    LoginRequest:
+      type: object
+      required:
+      - email
+      - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: yasser@example.com
+        password:
+          type: string
+          example: Password123!
+    GoogleLoginRequest:
+      type: object
+      required:
+      - credential
+      properties:
+        credential:
+          type: string
+          description: Google ID token / credential returned by the frontend Google sign-in flow.
+          example: PASTE_GOOGLE_ID_TOKEN_HERE
+    ResetPasswordRequest:
+      type: object
+      required:
+      - resetToken
+      - newPassword
+      properties:
+        resetToken:
+          type: string
+          example: reset_eyJhbGciOi...example
+        newPassword:
+          type: string
+          minLength: 8
+          example: NewPassword123!
+    MessageResponse:
+      type: object
+      required:
+      - message
+      properties:
+        message:
+          type: string
+    UserResponse:
+      type: object
+      required:
+      - user
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+    VerificationSuccessResponse:
+      type: object
+      required:
+      - message
+      - user
+      properties:
+        message:
+          type: string
+          example: Email verified successfully.
+        user:
+          $ref: '#/components/schemas/User'
+    RegisterResponse:
+      type: object
+      required:
+      - message
+      - user
+      properties:
+        message:
+          type: string
+          example: Verification code sent to your email.
+        user:
+          $ref: '#/components/schemas/User'
+    ResetTokenResponse:
+      type: object
+      required:
+      - resetToken
+      - expiresInSeconds
+      properties:
+        resetToken:
+          type: string
+          example: reset_eyJhbGciOi...example
+        expiresInSeconds:
+          type: integer
+          example: 600
+    ErrorResponse:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          type: string
+          example: UNAUTHENTICATED
+        message:
+          type: string
+          example: Authentication required.
+    ValidationErrorResponse:
+      type: object
+      required:
+      - code
+      - message
+      - errors
+      properties:
+        code:
+          type: string
+          const: VALIDATION_ERROR
+        message:
+          type: string
+          example: Invalid request.
+        errors:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            title: Title is required.
+    CategorySummary:
+      type: object
+      required:
+      - id
+      - name
+      properties:
+        id:
+          type: integer
+          example: 3
+        name:
+          type: string
+          example: Work
+    Category:
+      type: object
+      required:
+      - id
+      - name
+      - taskCount
+      properties:
+        id:
+          type: integer
+          example: 3
+        name:
+          type: string
+          example: Work
+        taskCount:
+          type: integer
+          example: 12
+    CategoryRequest:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          example: Work
+    CategoryListResponse:
+      type: object
+      required:
+      - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+    Task:
+      type: object
+      required:
+      - id
+      - title
+      - description
+      - dueDate
+      - isCompleted
+      - isImportant
+      - completedAt
+      - category
+      - createdAt
+      - updatedAt
+      properties:
+        id:
+          type: integer
+          example: 101
+        title:
+          type: string
+          example: Prepare Monday standup slides
+        description:
+          type:
+          - string
+          - 'null'
+          example: Cover sprint progress and blockers
+        dueDate:
+          type:
+          - string
+          - 'null'
+          format: date
+          example: '2026-09-25'
+        isCompleted:
+          type: boolean
+          example: false
+        isImportant:
+          type: boolean
+          example: true
+        completedAt:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          example: null
+        category:
+          oneOf:
+          - $ref: '#/components/schemas/CategorySummary'
+          - type: 'null'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-09-23T08:00:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-09-23T08:00:00.000Z'
+    CreateTaskRequest:
+      type: object
+      required:
+      - title
+      properties:
+        title:
+          type: string
+          example: Learn TypeScript
+        description:
+          type:
+          - string
+          - 'null'
+          example: Study generics and utility types
+        dueDate:
+          type:
+          - string
+          - 'null'
+          format: date
+          example: '2026-09-30'
+        categoryId:
+          type:
+          - integer
+          - 'null'
+          example: 2
+        isImportant:
+          type: boolean
+          example: true
+      description: userId is derived from the authenticated session and is not accepted from the client.
+    UpdateTaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Learn advanced TypeScript
+        description:
+          type:
+          - string
+          - 'null'
+        dueDate:
+          type:
+          - string
+          - 'null'
+          format: date
+        categoryId:
+          type:
+          - integer
+          - 'null'
+        isCompleted:
+          type: boolean
+          example: true
+        isImportant:
+          type: boolean
+          example: true
+      minProperties: 1
+    Pagination:
+      type: object
+      required:
+      - page
+      - limit
+      - total
+      - totalPages
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        total:
+          type: integer
+          example: 1
+        totalPages:
+          type: integer
+          example: 1
+    TaskListResponse:
+      type: object
+      required:
+      - data
+      - pagination
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+        pagination:
+          $ref: '#/components/schemas/Pagination'
