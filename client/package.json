@@ -13,6 +13,7 @@
     "@iconify-react/lucide": "gitlab:iconify-icons/react#lucide",
     "@iconify/react": "^6.0.2",
     "@react-oauth/google": "^0.13.5",
+    "@sirkitts/hello": "^1.0.5",
     "@supabase/supabase-js": "^2.117.2",
     "@tailwindcss/vite": "^4.3.3",
     "axios": "^1.20.0",
