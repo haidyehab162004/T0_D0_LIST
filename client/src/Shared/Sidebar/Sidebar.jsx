@@ -3,6 +3,7 @@ import { Icon } from "@iconify/react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase.js";
 
+
 const links = [
   { label: "Dashboard", path: "/dashboard", icon: "mdi:view-dashboard-outline" },
   { label: "My Tasks", path: "/tasks", icon: "mdi:checkbox-marked-outline" },
@@ -62,20 +63,20 @@ export default function Sidebar() {
 
  
   return (
-    <aside className="flex min-h-screen w-80 shrink-0 flex-col border-r border-slate-200 bg-white">
-      <div className="flex items-center gap-3 border-b border-slate-200 p-5">
-        <div className="rounded-2xl bg-violet-600 p-3 text-white">
-          <Icon icon="mdi:format-list-checks" width="28" />
+    <aside className="app-card flex min-h-screen w-80 shrink-0 flex-col border-r">
+      <div className="app-border flex items-center gap-3 border-b p-5">
+        <div className="rounded-2xl bg-blue-600 p-3 text-white">
+          <Icon icon="lucide:list-todo" width="28" />
         </div>
 
         <div>
-          <h1 className="text-2xl font-bold text-violet-600">DoList</h1>
-          <p className="text-sm text-slate-500">Stay organized</p>
+          <h1 className="text-2xl font-bold text-blue-600">DoList</h1>
+          <p className="app-muted text-sm">Stay organized</p>
         </div>
       </div>
 
       <nav className="flex-1 p-3">
-        <p className="mb-3 px-3 text-sm font-semibold text-slate-500">MENU</p>
+        <p className="app-muted mb-3 px-3 text-sm font-semibold">MENU</p>
 
         <div className="space-y-2">
           {links.map((link) => (
@@ -85,8 +86,8 @@ export default function Sidebar() {
               end={link.path === "/dashboard"}
               className={({ isActive }) =>
                 `flex items-center gap-3 rounded-xl px-4 py-3 transition ${isActive
-                  ? "bg-violet-600 font-semibold text-white shadow-lg"
-                  : "text-slate-600 hover:bg-violet-50 hover:text-violet-700"
+                  ? "bg-blue-600 font-semibold text-white shadow-lg"
+                  : "app-muted hover:bg-blue-50 hover:text-blue-700" 
                 }`
               }
             >
@@ -97,8 +98,8 @@ export default function Sidebar() {
         </div>
       </nav>
 
-      <div className="border-t border-slate-200 p-4">
-        <div className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
+      <div className="app-border border-t p-4">
+        <div className="app-border flex items-center gap-3 rounded-xl border p-3">
           {avatarUrl ? (
             <img
               src={avatarUrl}
@@ -113,7 +114,7 @@ export default function Sidebar() {
 
           <div className="min-w-0 flex-1">
             <p className="truncate font-medium">{name}</p>
-            <p className="truncate text-sm text-slate-500">{email}</p>
+            <p className="app-muted truncate text-sm">{email}</p>
           </div>
 
           <button
@@ -121,7 +122,7 @@ export default function Sidebar() {
             onClick={handleSignOut}
             aria-label="Sign out"
             title="Sign out"
-            className="text-slate-500 hover:text-violet-700"
+            className="app-muted hover:text-violet-700"
           >
             <Icon icon="mdi:logout" width="22" />
           </button>

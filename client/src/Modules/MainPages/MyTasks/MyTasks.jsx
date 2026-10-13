@@ -37,27 +37,27 @@ export default function MyTasks() {
     <main className="mx-auto max-w-3xl p-8">
       <h1 className="text-3xl font-bold">My Tasks</h1>
 
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-xl bg-white p-6 shadow">
+      <form onSubmit={handleSubmit} className="app-card mt-6 space-y-4 rounded-xl p-6 shadow">
         <input
           required
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           placeholder="What needs to be done?"
-          className="w-full rounded-lg border p-3"
+          className="app-input w-full rounded-lg border p-3"
         />
 
         <textarea
           value={description}
           onChange={(event) => setDescription(event.target.value)}
           placeholder="Add more details..."
-          className="w-full rounded-lg border p-3"
+          className="app-input w-full rounded-lg border p-3"
         />
 
         <div className="flex gap-4">
           <select
             value={category}
             onChange={(event) => setCategory(event.target.value)}
-            className="rounded-lg border p-3"
+            className="app-input rounded-lg border p-3"
           >
             <option>Personal</option>
             <option>Work</option>
@@ -68,7 +68,7 @@ export default function MyTasks() {
             type="date"
             value={dueDate}
             onChange={(event) => setDueDate(event.target.value)}
-            className="rounded-lg border p-3"
+            className="app-input rounded-lg border p-3"
           />
         </div>
 
@@ -86,10 +86,10 @@ export default function MyTasks() {
       ) : (
         <ul className="mt-3 space-y-3">
           {tasks.map((task) => (
-            <li key={task.id} className="rounded-lg bg-white p-4 shadow">
+            <li key={task.id} className="app-card rounded-lg p-4 shadow">
               <strong>{task.title}</strong>
               {task.category && <span className="ml-3 text-sm text-violet-700">{task.category}</span>}
-              {task.description && <p className="mt-1 text-gray-600">{task.description}</p>}
+              {task.description && <p className="app-muted mt-1">{task.description}</p>}
               {task.due_date && <p className="mt-1 text-sm">Due: {task.due_date}</p>}
             </li>
           ))}

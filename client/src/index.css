@@ -1,1 +1,51 @@
 @import "tailwindcss";
+
+:root {
+  --page-bg: #f8fafc;
+  --card-bg: #ffffff;
+  --main-text: #0f172a;
+  --muted-text: #64748b;
+  --card-border: #e2e8f0;
+  --progress-track: #e2e8f0;
+}
+
+:root[data-theme="dark"] {
+  --page-bg: #0f172a;
+  --card-bg: #1e293b;
+  --main-text: #f8fafc;
+  --muted-text: #cbd5e1;
+  --card-border: #334155;
+  --progress-track: #334155;
+}
+
+
+.app-page {
+  background-color: var(--page-bg);
+  color: var(--main-text);
+  transition: background-color 300ms ease, color 300ms ease;
+}
+
+.app-card {
+  background-color: var(--card-bg);
+  border-color: var(--card-border);
+  transition: background-color 300ms ease, color 300ms ease, border-color 300ms ease;
+}
+
+.app-muted {
+  color: var(--muted-text);
+}
+
+.app-border {
+  border-color: var(--card-border);
+}
+
+.app-input {
+  background-color: var(--card-bg);
+  color: var(--main-text);
+  border-color: var(--card-border);
+  transition: background-color 300ms ease, color 300ms ease, border-color 300ms ease;
+}
+
+.app-track {
+  background-color: var(--progress-track);
+}
