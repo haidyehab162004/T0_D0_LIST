@@ -1,6 +1,7 @@
 import { apiRequest } from '../../api/apiRequest.js'
 
 export const authApi = {
+
   register(data) {
     return apiRequest.post('/auth/register', data)
   },
