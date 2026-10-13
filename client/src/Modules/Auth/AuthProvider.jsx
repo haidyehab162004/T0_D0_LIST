@@ -1,54 +1,78 @@
-import { useEffect, useState } from 'react'
-import { authApi } from './authApi.js'
-import { AuthContext } from './AuthContext.js'
+import { useEffect, useState } from "react";
+import { authApi } from "./authApi.js";
+import { AuthContext } from "./AuthContext.js";
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function checkAuth() {
       try {
-        const response = await authApi.getMe()
-        setUser(response.data.user)
+        const response = await authApi.getMe();
+        setUser(response.data.user);
       } catch {
-        setUser(null)
+        setUser(null);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    checkAuth()
-  }, [])
+    checkAuth();
+  }, []);
 
   async function login(credentials) {
-    const response = await authApi.login(credentials)
-    setUser(response.data.user)
-    return response.data
+    const response = await authApi.login(credentials);
+
+    setUser(response.data.user);
+
+    return response.data;
+  }
+
+  async function googleLogin(credential) {
+    const response = await authApi.googleLogin({
+      credential,
+    });
+
+    setUser(response.data.user);
+
+    return response.data;
   }
 
   async function logout() {
     try {
-      await authApi.logout()
+      await authApi.logout();
     } finally {
-      setUser(null)
+      setUser(null);
     }
   }
 
   async function refreshUser() {
     try {
-      const response = await authApi.getMe()
-      setUser(response.data.user)
-      return response.data.user
+      const response = await authApi.getMe();
+
+      setUser(response.data.user);
+
+      return response.data.user;
     } catch {
-      setUser(null)
-      return null
+      setUser(null);
+
+      return null;
     }
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        googleLogin,
+        logout,
+        refreshUser,
+      }}
+    >
       {children}
     </AuthContext.Provider>
-  )
+  );
 }
