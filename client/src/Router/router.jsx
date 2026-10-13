@@ -3,6 +3,7 @@ import Dashboard from "../Modules/MainPages/Dashboard/Dashboard.jsx";
 import LoginForm from "../Modules/MainPages/Login/LoginForm.jsx";
 import MyTasks from "../Modules/MainPages/MyTasks/MyTasks.jsx";
  import RegisterForm from "../Modules/MainPages/Register/RegisterForm.jsx";
+import Settings from "../Modules/MainPages/Settings/Settings.jsx";
 import { Route, Routes } from "react-router-dom";
 
 function PlaceholderPage({ title }) {
@@ -21,7 +22,7 @@ export default function AppRoutes() {
         <Route path="important" element={<PlaceholderPage title="Important" />} />
         <Route path="completed" element={<PlaceholderPage title="Completed" />} />
         <Route path="categories" element={<PlaceholderPage title="Categories" />} />
-        <Route path="settings" element={<PlaceholderPage title="Settings" />} />
+        <Route path="/settings" element={<Settings />} />
       </Route>
     </Routes>
   );
