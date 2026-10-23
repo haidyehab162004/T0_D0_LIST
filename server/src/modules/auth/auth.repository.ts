@@ -75,6 +75,18 @@ async function findGoogleAccountByProviderId(
   return user;
 }
 
+async function createGoogleAccountLink(
+  userId: number,
+  providerAccountId: string,
+): Promise<void> {
+  await db.insert(authAccounts).values({
+    userId,
+    provider: "google",
+    providerAccountId,
+    passwordHash: null,
+  });
+}
+
 async function createLocalUser(
   input: RegisterInput,
   passwordHash: string,
@@ -175,6 +187,7 @@ export const authRepository = {
   findUserById,
   findLocalAccountByEmail,
   findGoogleAccountByProviderId,
+  createGoogleAccountLink,
   createLocalUser,
   createGoogleUser,
   markEmailVerified,
