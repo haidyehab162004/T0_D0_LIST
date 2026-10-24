@@ -6,6 +6,7 @@ import {
   forgotPassword,
   getCurrentUser,
   googleLogin,
+  linkGoogleAccount,
   login,
   logout,
   register,
@@ -36,6 +37,12 @@ authRouter.post(
 );
 authRouter.post("/login", validateRequest(loginValidation), login);
 authRouter.post("/google", validateRequest(googleLoginValidation), googleLogin);
+authRouter.post(
+  "/google/link",
+  requireAuth,
+  validateRequest(googleLoginValidation),
+  linkGoogleAccount,
+);
 authRouter.post(
   "/forgot-password",
   validateRequest(forgotPasswordValidation),

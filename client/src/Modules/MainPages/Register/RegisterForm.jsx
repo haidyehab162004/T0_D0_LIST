@@ -4,9 +4,10 @@ import { Icon } from '@iconify/react';
 import Inputs from '../Login/Shared/Inputs';
 import { useState } from 'react';
 import ConditionOfApproval from './components/ConditionOfApproval';
-import { NavLink } from 'react-router-dom';
+import { NavLink ,useNavigate} from 'react-router-dom';
 import Buttons from '../../../Components/Ui/Buttons';
 import PasswordStrength from './components/PasswordStrength';
+import { authApi } from '../../Auth/authApi.js'
 export default function RegisterForm() {
     const [show, setShow] = useState(false);
     const [password, setPassword] = useState('');
@@ -16,10 +17,14 @@ export default function RegisterForm() {
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showConfirm, setShowConfirm] = useState(false);
 
-
+    const [loading, setLoading] = useState(false);
+    // const [awaitingVerification, setAwaitingVerification] = useState(false);
+    
+    const navigate = useNavigate();
+    
     const [formError, setFormError] = useState("");
 
-    function handleSubmit(event) {
+    async function handleSubmit(event) {
         event.preventDefault();
 
         if (password !== confirmPassword) {
@@ -28,8 +33,22 @@ export default function RegisterForm() {
         }
 
         setFormError("");
-        // هنا هنضيف كود إنشاء الحساب بعدين
+        setLoading(true);
+
+        try {
+            await authApi.register({ name, email, password });
+          navigate('/verify-email', { state: { email } });
+        } catch (error) {
+            setFormError(
+                error.response?.data?.message || "حصل خطأ أثناء إنشاء الحساب."
+            );
+        } finally {
+            setLoading(false);
+        }
     }
+
+
+
     return (
         <div className="flex items-center align-top flex-col justify-self-auto pt-20 h-full bg-gray-200">
             <DescriptionOnForm />
@@ -47,7 +66,7 @@ export default function RegisterForm() {
                     <h1 className="text-2xl font-bold ">Create your account</h1>
                     <p className="text-gray-600 ">A calmer, clearer day starts with one task.</p>
                 </div>
-                <form >
+                <form onSubmit={handleSubmit}  >
                     <div className="px-4">
                         <Inputs
                             titel="Full Name"
@@ -55,7 +74,7 @@ export default function RegisterForm() {
                             required
                             placeholder="Enter your full name"
                             value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            onChange={(event) => setName(event.target.value)}
                             icon={
                                 <Icon
                                     icon="mdi:user-outline"
@@ -72,7 +91,7 @@ export default function RegisterForm() {
                             type="email"
                             placeholder="Enter your email"
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            onChange={(event) => setEmail(event.target.value)}
                             icon={
                                 <Icon
                                     icon="mdi:email-outline"
@@ -86,9 +105,9 @@ export default function RegisterForm() {
                             titel="Password"
                             required
                             type={show ? "text" : "password"}
-                            placeholder="Min. 6 characters"
+                           placeholder="Min. 8 characters"
                             value={password}
-                            onChange={(e) => setPassword(e.target.value)}
+                            onChange={(event) => setPassword(event.target.value)}
                             icon={
                                 <Icon
                                     icon="mdi:lock-outline"
@@ -106,7 +125,7 @@ export default function RegisterForm() {
                                 />
                             }
                         />
-                       
+
                         <PasswordStrength password={password} />
                         <Inputs
                             required
@@ -114,7 +133,7 @@ export default function RegisterForm() {
                             type={showConfirm ? "text" : "password"}
                             placeholder="Confirm your password"
                             value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            onChange={(event) => setConfirmPassword(event.target.value)}
                             icon={
                                 <Icon
                                     icon="mdi:lock-outline"
@@ -136,15 +155,11 @@ export default function RegisterForm() {
                             <ConditionOfApproval />
                             {formError && <p className="mt-3 text-sm text-red-600">{formError}</p>}
 
-                            <Buttons
-                                type="submit"
-                              
-                            >
-                                Create Account →
+                            <Buttons type="submit" disabled={loading}>
+                                {loading ? "Creating account..." : "Create Account →"}
                             </Buttons>
-
                         </div>
-                        
+
                     </div>
                 </form>
             </div>

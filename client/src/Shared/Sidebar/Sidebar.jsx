@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { supabase } from "../../lib/supabase.js";
-
+import { useAuth } from "../../Modules/Auth/useAuth.js";
 
 const links = [
   { label: "Dashboard", path: "/dashboard", icon: "mdi:view-dashboard-outline" },
@@ -14,54 +12,26 @@ const links = [
 ];
 
 export default function Sidebar() {
-  const [user, setUser] = useState(null);
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    let active = true;
-
-    supabase.auth.getSession().then(({ data, error }) => {
-      if (active && !error) {
-        setUser(data.session?.user ?? null);
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (active) setUser(session?.user ?? null);
-    });
-
-    return () => {
-      active = false;
-      subscription.unsubscribe();
-    };
-  }, []);
-
   async function handleSignOut() {
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      console.error("Sign-out error:", error.message);
-      return;
+    try {
+      await logout();
+    } catch (error) {
+      console.error(
+        "Sign-out error:",
+        error.response?.data?.message || error.message,
+      );
+    } finally {
+      navigate("/login");
     }
-
-    navigate("/login");
   }
 
-  const name =
-    user?.user_metadata?.full_name ||
-    user?.user_metadata?.name ||
-    user?.email?.split("@")[0] ||
-    "Account";
-
+  const name = user?.name || user?.email?.split("@")[0] || "Account";
   const email = user?.email || "";
   const initial = name.charAt(0).toUpperCase();
 
-  const avatarUrl =
-    user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture;
-
- 
   return (
     <aside className="app-card flex min-h-screen w-80 shrink-0 flex-col border-r">
       <div className="app-border flex items-center gap-3 border-b p-5">
@@ -85,9 +55,10 @@ export default function Sidebar() {
               to={link.path}
               end={link.path === "/dashboard"}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-xl px-4 py-3 transition ${isActive
-                  ? "bg-blue-600 font-semibold text-white shadow-lg"
-                  : "app-muted hover:bg-blue-50 hover:text-blue-700" 
+                `flex items-center gap-3 rounded-xl px-4 py-3 transition ${
+                  isActive
+                    ? "bg-blue-600 font-semibold text-white shadow-lg"
+                    : "app-muted hover:bg-blue-50 hover:text-blue-700"
                 }`
               }
             >
@@ -100,17 +71,9 @@ export default function Sidebar() {
 
       <div className="app-border border-t p-4">
         <div className="app-border flex items-center gap-3 rounded-xl border p-3">
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt={`${name}'s profile`}
-              className="size-11 shrink-0 rounded-2xl object-fit"
-            />
-          ) : (
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-violet-500 font-bold text-white">
-              {initial}
-            </div>
-          )}
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-violet-500 font-bold text-white">
+            {initial}
+          </div>
 
           <div className="min-w-0 flex-1">
             <p className="truncate font-medium">{name}</p>

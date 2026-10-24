@@ -289,6 +289,46 @@ paths:
                   value:
                     code: ACCOUNT_LINKING_REQUIRED
                     message: An account already exists for this email. Sign in using the existing method before linking Google.
+  /auth/google/link:
+    post:
+      tags:
+      - Auth
+      operationId: linkGoogleAccount
+      summary: Link Google to the signed-in account
+      description: Requires an authenticated session and a verified Google credential whose email matches the current account.
+      security:
+      - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleLoginRequest'
+      responses:
+        '200':
+          description: Google account linked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationSuccessResponse'
+        '401':
+          description: No authenticated session or invalid Google credential
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Google email does not match the signed-in account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Google account is already linked to a different account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /auth/forgot-password:
     post:
       tags:

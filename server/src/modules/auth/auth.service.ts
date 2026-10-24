@@ -461,6 +461,61 @@ async function googleLogin(
   }
 }
 
+async function linkGoogleAccount(
+  userId: number,
+  input: GoogleLoginInput,
+): Promise<{ message: string; user: PublicUser }> {
+  const profile = await verifyGoogleCredential(input.credential);
+  const user = await authRepository.findUserById(userId);
+
+  if (!user) {
+    throw new AppError(401, "UNAUTHENTICATED", "Authentication required.");
+  }
+
+  if (normalizedEmail(user.email) !== normalizedEmail(profile.email)) {
+    throw new AppError(
+      403,
+      "GOOGLE_EMAIL_MISMATCH",
+      "Sign in with a Google account that uses the same email address.",
+    );
+  }
+
+  const linkedUser = await authRepository.findGoogleAccountByProviderId(
+    profile.providerAccountId,
+  );
+
+  if (linkedUser) {
+    if (linkedUser.id === user.id) {
+      return { message: "Google account is already linked.", user };
+    }
+
+    throw new AppError(
+      409,
+      "GOOGLE_ACCOUNT_IN_USE",
+      "This Google account is linked to another account.",
+    );
+  }
+
+  try {
+    await authRepository.createGoogleAccountLink(
+      user.id,
+      profile.providerAccountId,
+    );
+  } catch (error) {
+    if (isPostgresUniqueViolation(error)) {
+      throw new AppError(
+        409,
+        "GOOGLE_ACCOUNT_IN_USE",
+        "A Google account is already linked to this account or another account.",
+      );
+    }
+
+    throw error;
+  }
+
+  return { message: "Google account linked successfully.", user };
+}
+
 async function forgotPassword(input: EmailInput): Promise<string> {
   const email = normalizedEmail(input.email);
 
@@ -601,6 +656,7 @@ export const authService = {
   resendVerificationOtp,
   login,
   googleLogin,
+  linkGoogleAccount,
   forgotPassword,
   verifyResetOtp,
   resetPassword,

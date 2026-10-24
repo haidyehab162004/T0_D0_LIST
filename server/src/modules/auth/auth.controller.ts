@@ -100,6 +100,18 @@ export const googleLogin = asyncHandler(async (request, response) => {
   });
 });
 
+export const linkGoogleAccount = asyncHandler(async (request, response) => {
+  const result = await authService.linkGoogleAccount(
+    request.auth!.userId,
+    request.body as GoogleLoginInput,
+  );
+
+  response.status(200).json({
+    message: result.message,
+    user: result.user,
+  });
+});
+
 export const forgotPassword = asyncHandler(
   async (request, response) => {
     const message = await authService.forgotPassword(

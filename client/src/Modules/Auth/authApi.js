@@ -22,11 +22,15 @@ export const authApi = {
     return apiRequest.post('/auth/google', data)
   },
 
+  linkGoogleAccount(data) {
+    return apiRequest.post('/auth/google/link', data)
+  },
+
   forgotPassword(data) {
     return apiRequest.post('/auth/forgot-password', data)
   },
 
-  verifyResetOtp(data) {
+  verifyResetOtp(data) { 
     return apiRequest.post('/auth/verify-reset-otp', data)
   },
 
