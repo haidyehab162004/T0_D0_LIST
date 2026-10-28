@@ -1,7 +1,14 @@
 import { z } from "zod";
 
+// PostgreSQL identity columns are 32-bit integers; validate IDs before Number().
+// Prevent oversized identifiers and page values from producing unsafe offsets.
 const positiveIntegerString = (fieldName: string) =>
-  z.string().regex(/^[1-9]\d*$/, `${fieldName} must be a positive integer.`);
+  z.string()
+    .regex(/^[1-9]\d*$/, `${fieldName} must be a positive integer.`)
+    .refine(
+      (value) => Number.isSafeInteger(Number(value)) && Number(value) <= 2_147_483_647,
+      `${fieldName} is out of range.`,
+    );
 
 const dateOnlySchema = z
   .string()

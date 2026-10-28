@@ -1,35 +1,33 @@
-import type { Response } from "express";
-
 import { asyncHandler } from "../../middleware/async-handler";
 import { categoryService } from "./category.service";
 import type { CategoryInput } from "./category.types";
 
-function sendNotImplemented(response: Response, operation: string): void {
-  response.status(501).json({
-    code: "NOT_IMPLEMENTED",
-    message: `${operation} API skeleton is wired. Business logic is not implemented yet.`,
-  });
-}
-
-export const listCategories = asyncHandler(async (_request, response) => {
-  await categoryService.listCategories();
-  sendNotImplemented(response, "List categories");
+export const listCategories = asyncHandler(async (request, response) => {
+  const result = await categoryService.listCategories(request.auth!.userId);
+  response.status(200).json(result);
 });
 
 export const createCategory = asyncHandler(async (request, response) => {
-  await categoryService.createCategory(request.body as CategoryInput);
-  sendNotImplemented(response, "Create category");
+  const result = await categoryService.createCategory(
+    request.auth!.userId,
+    request.body as CategoryInput,
+  );
+  response.status(201).json(result);
 });
 
 export const updateCategory = asyncHandler(async (request, response) => {
-  await categoryService.updateCategory(
-    String(request.params.categoryId),
+  const result = await categoryService.updateCategory(
+    request.auth!.userId,
+    Number(request.params.categoryId),
     request.body as CategoryInput,
   );
-  sendNotImplemented(response, "Update category");
+  response.status(200).json(result);
 });
 
 export const deleteCategory = asyncHandler(async (request, response) => {
-  await categoryService.deleteCategory(String(request.params.categoryId));
-  sendNotImplemented(response, "Delete category");
+  await categoryService.deleteCategory(
+    request.auth!.userId,
+    Number(request.params.categoryId),
+  );
+  response.status(204).end();
 });
