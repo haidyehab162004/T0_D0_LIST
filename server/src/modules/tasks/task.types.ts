@@ -15,13 +15,14 @@ export interface UpdateTaskInput {
   isImportant?: boolean;
 }
 
+// Raw URL query values are strings; the validator enforces their allowed values.
 export interface ListTasksQuery {
-  completed?: unknown;
-  important?: unknown;
-  categoryId?: unknown;
-  q?: unknown;
-  sort?: unknown;
-  order?: unknown;
-  page?: unknown;
-  limit?: unknown;
+  completed?: "true" | "false";
+  important?: "true" | "false";
+  categoryId?: string;
+  q?: string;
+  sort?: "createdAt" | "dueDate" | "title";
+  order?: "asc" | "desc";
+  page?: string;
+  limit?: string;
 }

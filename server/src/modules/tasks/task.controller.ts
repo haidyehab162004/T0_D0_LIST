@@ -1,40 +1,44 @@
-import type { Response } from "express";
-
 import { asyncHandler } from "../../middleware/async-handler";
 import { taskService } from "./task.service";
 import type { CreateTaskInput, ListTasksQuery, UpdateTaskInput } from "./task.types";
 
-function sendNotImplemented(response: Response, operation: string): void {
-  response.status(501).json({
-    code: "NOT_IMPLEMENTED",
-    message: `${operation} API skeleton is wired. Business logic is not implemented yet.`,
-  });
-}
-
 export const listTasks = asyncHandler(async (request, response) => {
-  await taskService.listTasks(request.query as ListTasksQuery);
-  sendNotImplemented(response, "List tasks");
+  const result = await taskService.listTasks(
+    request.auth!.userId,
+    request.query as ListTasksQuery,
+  );
+  response.status(200).json(result);
 });
 
 export const createTask = asyncHandler(async (request, response) => {
-  await taskService.createTask(request.body as CreateTaskInput);
-  sendNotImplemented(response, "Create task");
+  const task = await taskService.createTask(
+    request.auth!.userId,
+    request.body as CreateTaskInput,
+  );
+  response.status(201).json(task);
 });
 
 export const getTask = asyncHandler(async (request, response) => {
-  await taskService.getTask(String(request.params.taskId));
-  sendNotImplemented(response, "Get task");
+  const task = await taskService.getTask(
+    request.auth!.userId,
+    Number(request.params.taskId),
+  );
+  response.status(200).json(task);
 });
 
 export const updateTask = asyncHandler(async (request, response) => {
-  await taskService.updateTask(
-    String(request.params.taskId),
+  const task = await taskService.updateTask(
+    request.auth!.userId,
+    Number(request.params.taskId),
     request.body as UpdateTaskInput,
   );
-  sendNotImplemented(response, "Update task");
+  response.status(200).json(task);
 });
 
 export const deleteTask = asyncHandler(async (request, response) => {
-  await taskService.deleteTask(String(request.params.taskId));
-  sendNotImplemented(response, "Delete task");
+  await taskService.deleteTask(
+    request.auth!.userId,
+    Number(request.params.taskId),
+  );
+  response.status(204).end();
 });
